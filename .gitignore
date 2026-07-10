@@ -2,3 +2,12 @@
 node_modules/
 
 /src/generated/prisma
+
+# environment secrets
+.env
+
+# logs
+logs/
+
+# build
+dist/
