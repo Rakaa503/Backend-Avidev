@@ -13,12 +13,27 @@ export interface UpdateUserData {
 }
 
 export class UsersRepository {
-    async findAll() {
-        return prisma.user.findMany({
-            orderBy: {
-                id: "desc",
-            },
-        });
+    async findAll(
+        page: number,
+        limit: number
+    ) {
+        const skip = (page - 1) * limit;
+
+        const [users, total] = await Promise.all([
+            prisma.user.findMany({
+                skip,
+                take: limit,
+                orderBy: {
+                    id: "desc",
+                },
+            }),
+            prisma.user.count(),
+        ]);
+
+        return {
+            users,
+            total,
+        };
     }
 
     async findById(id: number) {

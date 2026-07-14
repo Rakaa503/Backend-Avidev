@@ -15,15 +15,30 @@ export class UsersController {
     }
 
     async index(c: Context) {
-        const users = await this.service.getAll();
+        const page = Number(
+            c.req.query("page") ?? 1
+        );
+
+        const limit = Number(
+            c.req.query("limit") ?? 10
+        );
+
+        const users =
+            await this.service.getAll(
+                page,
+                limit
+            );
 
         return c.json(users);
     }
 
     async show(c: Context) {
-        const id = Number(c.req.param("id"));
+        const id = Number(
+            c.req.param("id")
+        );
 
-        const user = await this.service.getById(id);
+        const user =
+            await this.service.getById(id);
 
         return c.json(user);
     }
@@ -31,29 +46,41 @@ export class UsersController {
     async store(c: Context) {
         const body = await c.req.json();
 
-        const data = CreateUserSchema.parse(body);
+        const data =
+            CreateUserSchema.parse(body);
 
-        const user = await this.service.create(data);
+        const user =
+            await this.service.create(data);
 
         return c.json(user, 201);
     }
 
     async update(c: Context) {
-        const id = Number(c.req.param("id"));
+        const id = Number(
+            c.req.param("id")
+        );
 
         const body = await c.req.json();
 
-        const data = UpdateUserSchema.parse(body);
+        const data =
+            UpdateUserSchema.parse(body);
 
-        const user = await this.service.update(id, data);
+        const user =
+            await this.service.update(
+                id,
+                data
+            );
 
         return c.json(user);
     }
 
     async destroy(c: Context) {
-        const id = Number(c.req.param("id"));
+        const id = Number(
+            c.req.param("id")
+        );
 
-        const result = await this.service.delete(id);
+        const result =
+            await this.service.delete(id);
 
         return c.json(result);
     }

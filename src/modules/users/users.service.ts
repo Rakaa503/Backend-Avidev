@@ -1,12 +1,8 @@
-import {
-    hashPassword,
-} from "../../core/crypto/bcrypt";
+import { hashPassword } from "../../core/crypto/bcrypt";
 
 import { AppError } from "../../core/errors/app-error";
 
-import {
-    UsersRepository,
-} from "./users.repository";
+import { UsersRepository } from "./users.repository";
 
 import type {
     CreateUserInput,
@@ -20,28 +16,62 @@ export class UsersService {
         this.repository = new UsersRepository();
     }
 
-    async getAll() {
-        const users = await this.repository.findAll();
+    async getAll(
+        page: number,
+        limit: number
+    ) {
+        const { users, total } =
+            await this.repository.findAll(
+                page,
+                limit
+            );
 
-        return users.map(({ password, refreshToken, ...user }) => user);
+        const data = users.map(
+            ({ password, refreshToken, ...user }) => user
+        );
+
+        return {
+            data,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(
+                    total / limit
+                ),
+                hasNext:
+                    page <
+                    Math.ceil(total / limit),
+                hasPrev: page > 1,
+            },
+        };
     }
 
     async getById(id: number) {
-        const user = await this.repository.findById(id);
+        const user =
+            await this.repository.findById(id);
 
         if (!user) {
-            throw new AppError("User tidak ditemukan", 404);
+            throw new AppError(
+                "User tidak ditemukan",
+                404
+            );
         }
 
-        const { password, refreshToken, ...safeUser } = user;
+        const {
+            password,
+            refreshToken,
+            ...safeUser
+        } = user;
 
         return safeUser;
     }
 
     async create(data: CreateUserInput) {
-        const exists = await this.repository.findByUsername(
-            data.username
-        );
+        const exists =
+            await this.repository.findByUsername(
+                data.username
+            );
 
         if (exists) {
             throw new AppError(
@@ -50,18 +80,21 @@ export class UsersService {
             );
         }
 
-        const hashedPassword = await hashPassword(
-            data.password
-        );
+        const hashedPassword =
+            await hashPassword(data.password);
 
-        const user = await this.repository.create({
-            username: data.username,
-            password: hashedPassword,
-            role: data.role,
-        });
+        const user =
+            await this.repository.create({
+                username: data.username,
+                password: hashedPassword,
+                role: data.role,
+            });
 
-        const { password, refreshToken, ...safeUser } =
-            user;
+        const {
+            password,
+            refreshToken,
+            ...safeUser
+        } = user;
 
         return safeUser;
     }
@@ -70,7 +103,8 @@ export class UsersService {
         id: number,
         data: UpdateUserInput
     ) {
-        const user = await this.repository.findById(id);
+        const user =
+            await this.repository.findById(id);
 
         if (!user) {
             throw new AppError(
@@ -99,7 +133,8 @@ export class UsersService {
         let password = data.password;
 
         if (password) {
-            password = await hashPassword(password);
+            password =
+                await hashPassword(password);
         }
 
         const updated =
@@ -119,7 +154,8 @@ export class UsersService {
     }
 
     async delete(id: number) {
-        const user = await this.repository.findById(id);
+        const user =
+            await this.repository.findById(id);
 
         if (!user) {
             throw new AppError(
