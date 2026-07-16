@@ -1,6 +1,5 @@
 import { createMiddleware } from "hono/factory";
-
-import { logger } from "../../core/logger";
+import { logger } from "avss-lite-Raka503";
 
 export const loggerMiddleware = createMiddleware(
     async (c, next) => {
@@ -10,30 +9,15 @@ export const loggerMiddleware = createMiddleware(
 
         const duration = performance.now() - start;
 
-        const requestId =
-            c.get("requestId") ?? "-";
-
-        const clientIp =
-            c.get("clientIp") ?? "-";
-
-        const method = c.req.method;
-
-        const path = c.req.path;
-
-        const status = c.res.status;
-
-        const userAgent =
-            c.req.header("user-agent") ?? "-";
-
         logger.info(
             [
-                `requestId=${requestId}`,
-                `method=${method}`,
-                `path=${path}`,
-                `status=${status}`,
+                `requestId=${c.get("requestId") ?? "-"}`,
+                `method=${c.req.method}`,
+                `path=${c.req.path}`,
+                `status=${c.res.status}`,
                 `duration=${duration.toFixed(2)}ms`,
-                `ip=${clientIp}`,
-                `userAgent="${userAgent}"`,
+                `ip=${c.get("clientIp") ?? "-"}`,
+                `userAgent=${c.req.header("user-agent") ?? "-"}`,
             ].join(" | ")
         );
     }
