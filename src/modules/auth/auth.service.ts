@@ -3,11 +3,7 @@ import {
     comparePassword,
 } from "../../core/crypto/bcrypt";
 
-import {
-    signAccessToken,
-    signRefreshToken,
-    verifyRefreshToken,
-} from "../../core/auth/jwt";
+import { JWT } from "../../core/auth";
 
 import { AppError } from "../../core/errors/app-error";
 
@@ -41,14 +37,14 @@ export class AuthService {
             });
 
         const accessToken =
-            signAccessToken({
+            JWT.signAccessToken({
                 id: user.id,
                 username: user.username,
                 role: user.role,
             });
 
         const refreshToken =
-            signRefreshToken({
+            JWT.signRefreshToken({
                 id: user.id,
             });
 
@@ -70,7 +66,6 @@ export class AuthService {
             refreshToken,
         };
     }
-
 
     async login(
         username: string,
@@ -100,30 +95,27 @@ export class AuthService {
         }
 
         const accessToken =
-            signAccessToken({
+            JWT.signAccessToken({
                 id: user.id,
                 username: user.username,
                 role: user.role,
             });
 
         const refreshToken =
-            signRefreshToken({
+            JWT.signRefreshToken({
                 id: user.id,
             });
-
 
         await this.repository.updateRefreshToken(
             user.id,
             refreshToken
         );
 
-
         const {
             password: _,
             refreshToken: __,
             ...safeUser
         } = user;
-
 
         return {
             user: safeUser,
@@ -133,7 +125,6 @@ export class AuthService {
         };
     }
 
-
     async refresh(
         refreshToken: string
     ) {
@@ -141,7 +132,7 @@ export class AuthService {
 
         try {
             payload =
-                verifyRefreshToken(refreshToken);
+                JWT.verifyRefreshToken(refreshToken);
         } catch {
             throw new AppError(
                 "Refresh token tidak valid",
@@ -149,12 +140,10 @@ export class AuthService {
             );
         }
 
-
         const user =
             await this.repository.findById(
                 payload.id
             );
-
 
         if (!user) {
             throw new AppError(
@@ -162,7 +151,6 @@ export class AuthService {
                 404
             );
         }
-
 
         if (
             user.refreshToken !== refreshToken
@@ -173,20 +161,17 @@ export class AuthService {
             );
         }
 
-
         const accessToken =
-            signAccessToken({
+            JWT.signAccessToken({
                 id: user.id,
                 username: user.username,
                 role: user.role,
             });
 
-
         return {
             accessToken,
         };
     }
-
 
     async logout(id: number) {
         await this.repository.deleteRefreshToken(id);
@@ -196,7 +181,6 @@ export class AuthService {
         };
     }
 
-
     async changePassword(
         id: number,
         oldPassword: string,
@@ -205,7 +189,6 @@ export class AuthService {
         const user =
             await this.repository.findById(id);
 
-
         if (!user) {
             throw new AppError(
                 "User tidak ditemukan",
@@ -213,13 +196,11 @@ export class AuthService {
             );
         }
 
-
         const valid =
             await comparePassword(
                 oldPassword,
                 user.password
             );
-
 
         if (!valid) {
             throw new AppError(
@@ -228,18 +209,15 @@ export class AuthService {
             );
         }
 
-
         const hashedPassword =
             await hashPassword(
                 newPassword
             );
 
-
         await this.repository.updatePassword(
             id,
             hashedPassword
         );
-
 
         return {
             message:

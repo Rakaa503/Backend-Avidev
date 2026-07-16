@@ -2,37 +2,65 @@ import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export class ApiResponse {
-    static success(
+    static success<T>(
         c: Context,
-        message: string,
-        data: unknown = null,
-        status: number = 200
+        data: T,
+        message = "Success",
+        status: ContentfulStatusCode = 200
     ) {
         return c.json(
             {
                 success: true,
                 message,
                 data,
-                errors: null,
             },
-            status as ContentfulStatusCode
+            status
+        );
+    }
+
+    static created<T>(
+        c: Context,
+        data: T,
+        message = "Created"
+    ) {
+        return ApiResponse.success(
+            c,
+            data,
+            message,
+            201
         );
     }
 
     static error(
         c: Context,
-        message: string,
-        status: number = 500,
-        errors: unknown = null
+        message = "Error",
+        status: ContentfulStatusCode = 400
     ) {
         return c.json(
             {
                 success: false,
                 message,
-                data: null,
-                errors,
             },
-            status as ContentfulStatusCode
+            status
         );
+    }
+
+    static paginated<T>(
+        c: Context,
+        data: T,
+        page: number,
+        limit: number,
+        total: number
+    ) {
+        return c.json({
+            success: true,
+            data,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        });
     }
 }

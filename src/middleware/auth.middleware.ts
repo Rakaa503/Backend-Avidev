@@ -1,6 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { AppError } from "../core/errors/app-error";
-import { verifyAccessToken } from "../core/auth/jwt";
+import { JWT } from "../core/auth";
 
 export interface AuthUser {
     id: number;
@@ -28,7 +28,7 @@ export const authMiddleware = createMiddleware<{
     const token = authorization.substring(7);
 
     try {
-        const payload = verifyAccessToken(token);
+        const payload = JWT.verifyAccessToken(token);
 
         c.set("user", {
             id: payload.id,

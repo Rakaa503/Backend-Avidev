@@ -2,8 +2,9 @@ import jwt, {
     type Secret,
     type SignOptions,
     type JwtPayload as DefaultJwtPayload,
+    TokenExpiredError,
+    JsonWebTokenError,
 } from "jsonwebtoken";
-import { env } from "../config";
 
 export interface AccessTokenPayload {
     id: number;
@@ -15,60 +16,168 @@ export interface RefreshTokenPayload {
     id: number;
 }
 
-const ACCESS_SECRET: Secret = env.JWT_SECRET;
-const REFRESH_SECRET: Secret =
-    env.JWT_REFRESH_SECRET ?? env.JWT_SECRET;
+export interface JWTConfig {
+    accessSecret: Secret;
+    refreshSecret: Secret;
+    accessExpiresIn?: SignOptions["expiresIn"];
+    refreshExpiresIn?: SignOptions["expiresIn"];
+}
 
-const ACCESS_EXPIRES_IN = "15m";
-const REFRESH_EXPIRES_IN = "7d";
+export class JWT {
+    private static config: Readonly<JWTConfig> | null = null;
 
-export const signAccessToken = (
-    payload: AccessTokenPayload
-): string => {
-    const options: SignOptions = {
-        expiresIn: ACCESS_EXPIRES_IN,
-    };
+    static configure(config: JWTConfig): void {
+        JWT.config = Object.freeze({
+            accessExpiresIn: "15m",
+            refreshExpiresIn: "7d",
+            ...config,
+        });
+    }
 
-    return jwt.sign(payload, ACCESS_SECRET, options);
-};
+    private static getConfig(): Readonly<JWTConfig> {
+        if (!JWT.config) {
+            throw new Error(
+                "JWT is not configured. Call JWT.configure() first."
+            );
+        }
 
-export const signRefreshToken = (
-    payload: RefreshTokenPayload
-): string => {
-    const options: SignOptions = {
-        expiresIn: REFRESH_EXPIRES_IN,
-    };
+        return JWT.config;
+    }
 
-    return jwt.sign(payload, REFRESH_SECRET, options);
-};
+    private static isAccessPayload(
+        payload: unknown
+    ): payload is AccessTokenPayload {
+        return (
+            typeof payload === "object" &&
+            payload !== null &&
+            "id" in payload &&
+            "username" in payload &&
+            "role" in payload
+        );
+    }
 
-export const verifyAccessToken = (
-    token: string
-): AccessTokenPayload => {
-    return jwt.verify(
-        token,
-        ACCESS_SECRET
-    ) as AccessTokenPayload;
-};
+    private static isRefreshPayload(
+        payload: unknown
+    ): payload is RefreshTokenPayload {
+        return (
+            typeof payload === "object" &&
+            payload !== null &&
+            "id" in payload
+        );
+    }
 
-export const verifyRefreshToken = (
-    token: string
-): RefreshTokenPayload => {
-    return jwt.verify(
-        token,
-        REFRESH_SECRET
-    ) as RefreshTokenPayload;
-};
+    static signAccessToken(
+        payload: AccessTokenPayload
+    ): string {
+        const config = JWT.getConfig();
 
-export const decodeToken = (
-    token: string
-): DefaultJwtPayload | string | null => {
-    return jwt.decode(token);
-};
+        return jwt.sign(payload, config.accessSecret, {
+            expiresIn: config.accessExpiresIn,
+        });
+    }
 
-/**
- * Backward Compatibility
- */
+    static signRefreshToken(
+        payload: RefreshTokenPayload
+    ): string {
+        const config = JWT.getConfig();
 
-export const signToken = signAccessToken;
-export const verifyToken = verifyAccessToken;
+        return jwt.sign(payload, config.refreshSecret, {
+            expiresIn: config.refreshExpiresIn,
+        });
+    }
+
+    static verifyAccessToken(
+        token: string
+    ): AccessTokenPayload {
+        try {
+            const config = JWT.getConfig();
+
+            const payload = jwt.verify(
+                token,
+                config.accessSecret
+            );
+
+            if (!JWT.isAccessPayload(payload)) {
+                throw new Error("Invalid access token payload.");
+            }
+
+            return payload;
+        } catch (error) {
+            if (
+                error instanceof TokenExpiredError ||
+                error instanceof JsonWebTokenError
+            ) {
+                throw new Error("Invalid or expired access token.");
+            }
+
+            throw error;
+        }
+    }
+
+    static verifyRefreshToken(
+        token: string
+    ): RefreshTokenPayload {
+        try {
+            const config = JWT.getConfig();
+
+            const payload = jwt.verify(
+                token,
+                config.refreshSecret
+            );
+
+            if (!JWT.isRefreshPayload(payload)) {
+                throw new Error("Invalid refresh token payload.");
+            }
+
+            return payload;
+        } catch (error) {
+            if (
+                error instanceof TokenExpiredError ||
+                error instanceof JsonWebTokenError
+            ) {
+                throw new Error("Invalid or expired refresh token.");
+            }
+
+            throw error;
+        }
+    }
+
+    static decode(
+        token: string
+    ): DefaultJwtPayload | string | null {
+        return jwt.decode(token);
+    }
+
+    static isExpired(token: string): boolean {
+        const payload = jwt.decode(token);
+
+        if (
+            payload === null ||
+            typeof payload === "string"
+        ) {
+            return true;
+        }
+
+        if (payload.exp === undefined) {
+            return true;
+        }
+
+        return payload.exp * 1000 <= Date.now();
+    }
+
+    /**
+     * Backward Compatibility
+     */
+
+    static signToken(
+        payload: AccessTokenPayload
+    ): string {
+        return JWT.signAccessToken(payload);
+    }
+
+    static verifyToken(
+        token: string
+    ): AccessTokenPayload {
+        return JWT.verifyAccessToken(token);
+    }
+}
