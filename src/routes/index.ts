@@ -7,9 +7,19 @@ import dashboard from "../modules/dashboard/dashboard.route";
 
 const routes = new Hono();
 
-routes.route("/auth", auth);
-routes.route("/users", users);
-routes.route("/orders", orders);
-routes.route("/dashboard", dashboard);
+const api = new Hono();
+
+/**
+ * API V1
+ */
+api.route("/auth", auth);
+api.route("/users", users);
+api.route("/orders", orders);
+api.route("/dashboard", dashboard);
+
+/**
+ * Versioning
+ */
+routes.route("/api/v1", api);
 
 export default routes;
