@@ -11,7 +11,7 @@ export const CreateOrderSchema = z.object({
         .enum(["pending", "completed"])
         .default("pending"),
 
-    userId: z
+    userId: z.coerce
         .number()
         .int()
         .positive(),
@@ -29,12 +29,9 @@ export const UpdateOrderSchema = z.object({
         .enum(["pending", "completed"])
         .optional(),
 
-    userId: z
+    userId: z.coerce
         .number()
         .int()
         .positive()
         .optional(),
 });
-
-export type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
-export type UpdateOrderInput = z.infer<typeof UpdateOrderSchema>;
