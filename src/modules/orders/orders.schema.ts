@@ -35,3 +35,11 @@ export const UpdateOrderSchema = z.object({
         .positive()
         .optional(),
 });
+
+export type CreateOrderInput = z.infer<
+    typeof CreateOrderSchema
+>;
+
+export type UpdateOrderInput = z.infer<
+    typeof UpdateOrderSchema
+>;

@@ -6,12 +6,20 @@ import { requestIdMiddleware } from "./middleware/request-id";
 
 import { securityMiddleware } from "./middleware/security.middleware";
 
+import { errorMiddleware } from "./middleware/error.middleware";
+
 import {
     rateLimitMiddleware,
     createRateLimitMiddleware,
 } from "./middleware/rate-limit.middleware";
 
 const app = new Hono();
+
+/**
+ * Global Error Handler
+ * Harus paling atas
+ */
+app.use("*", errorMiddleware);
 
 /**
  * Request ID

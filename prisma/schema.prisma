@@ -8,27 +8,52 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  password     String
-  role         String   @default("admin")
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  role     String @default("admin")
 
   refreshToken String?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-  orders Order[]
+  orders    Order[]
+  auditLogs AuditLog[]
 }
 
 model Order {
-  id        Int      @id @default(autoincrement())
-  title     String
-  status    String   @default("pending")
+  id     Int    @id @default(autoincrement())
+  title  String
+  status String @default("pending")
 
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+model AuditLog {
+  id Int @id @default(autoincrement())
+
+  userId Int?
+
+  action String
+
+  method String
+
+  path String
+
+  statusCode Int
+
+  ip String?
+
+  userAgent String?
+
+  requestId String?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
