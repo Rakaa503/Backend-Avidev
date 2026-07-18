@@ -3,8 +3,6 @@ import { Hono } from "hono";
 import { AuthController } from "./auth.controller";
 import { authMiddleware } from "../../middleware/auth.middleware";
 
-console.log("AUTH ROUTE LOADED");
-
 const auth = new Hono();
 
 const controller = new AuthController();

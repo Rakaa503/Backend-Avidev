@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
 
 import { AppError } from "../core/errors/app-error";
+
 import type { AuthUser } from "./auth.middleware";
 
 type Variables = {
@@ -8,7 +9,7 @@ type Variables = {
 };
 
 export const roleMiddleware = (
-    ...roles: string[]
+    ...allowedRoles: string[]
 ) =>
     createMiddleware<{
         Variables: Variables;
@@ -16,11 +17,17 @@ export const roleMiddleware = (
         const user = c.get("user");
 
         if (!user) {
-            throw new AppError("Unauthorized", 401);
+            throw new AppError(
+                "Unauthorized",
+                401
+            );
         }
 
-        if (!roles.includes(user.role)) {
-            throw new AppError("Forbidden", 403);
+        if (!allowedRoles.includes(user.role)) {
+            throw new AppError(
+                "Forbidden",
+                403
+            );
         }
 
         await next();

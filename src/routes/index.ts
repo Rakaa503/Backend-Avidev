@@ -4,6 +4,7 @@ import auth from "../modules/auth/auth.route";
 import users from "../modules/users/users.route";
 import orders from "../modules/orders/orders.route";
 import dashboard from "../modules/dashboard/dashboard.route";
+import products from "../modules/products/products.route";
 
 const routes = new Hono();
 
@@ -16,6 +17,7 @@ api.route("/auth", auth);
 api.route("/users", users);
 api.route("/orders", orders);
 api.route("/dashboard", dashboard);
+api.route("/products", products);
 
 /**
  * Versioning

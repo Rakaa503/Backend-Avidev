@@ -33,7 +33,7 @@ export class AuthService {
             await this.repository.create({
                 username,
                 password: hashedPassword,
-                role: "superadmin",
+                role: "user",
             });
 
         const accessToken =
@@ -66,6 +66,7 @@ export class AuthService {
             refreshToken,
         };
     }
+
 
     async login(
         username: string,
@@ -125,6 +126,7 @@ export class AuthService {
         };
     }
 
+
     async refresh(
         refreshToken: string
     ) {
@@ -173,6 +175,7 @@ export class AuthService {
         };
     }
 
+
     async logout(id: number) {
         await this.repository.deleteRefreshToken(id);
 
@@ -180,6 +183,7 @@ export class AuthService {
             message: "Logout berhasil",
         };
     }
+
 
     async changePassword(
         id: number,

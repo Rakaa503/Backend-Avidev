@@ -4,7 +4,8 @@ import routes from "./routes";
 
 import { requestIdMiddleware } from "./middleware/request-id";
 import { securityMiddleware } from "./middleware/security.middleware";
-import { errorMiddleware } from "./middleware/error.middleware";
+import { ZodError } from "zod";
+import { AppError } from "./core/errors/app-error";
 
 import {
     rateLimitMiddleware,
@@ -15,11 +16,41 @@ import { swagger } from "./docs/swagger";
 import { openApiDocument } from "./docs/openapi";
 
 const app = new Hono();
+app.onError((err, c) => {
+    if (err instanceof AppError) {
+        return c.json(
+            {
+                success: false,
+                message: err.message,
+            },
+            err.status as 400 | 401 | 403 | 404 | 409 | 422 | 500
+        );
+    }
 
+    if (err instanceof ZodError) {
+        return c.json(
+            {
+                success: false,
+                message: "Validation failed",
+                errors: err.issues,
+            },
+            400
+        );
+    }
+
+    console.error(err);
+
+    return c.json(
+        {
+            success: false,
+            message: "Internal Server Error",
+        },
+        500
+    );
+});
 /**
  * Global Error Handler
  */
-app.use("*", errorMiddleware);
 
 /**
  * Request ID

@@ -7,6 +7,12 @@ export const errorMiddleware = createMiddleware(
         try {
             await next();
         } catch (error) {
+            console.log("========== ERROR MIDDLEWARE ==========");
+            console.log("instanceof AppError:", error instanceof AppError);
+            console.log("constructor:", (error as Error)?.constructor?.name);
+            console.log("error:", error);
+            console.log("======================================");
+
             if (error instanceof AppError) {
                 return c.json(
                     {
@@ -14,7 +20,14 @@ export const errorMiddleware = createMiddleware(
                         message: error.message,
                     },
                     {
-                        status: error.status as 400 | 401 | 403 | 404 | 409 | 422 | 500,
+                        status: error.status as
+                            | 400
+                            | 401
+                            | 403
+                            | 404
+                            | 409
+                            | 422
+                            | 500,
                     }
                 );
             }

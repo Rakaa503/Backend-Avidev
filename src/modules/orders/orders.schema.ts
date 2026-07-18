@@ -1,38 +1,48 @@
 import { z } from "zod";
 
 export const CreateOrderSchema = z.object({
-    title: z
-        .string()
-        .trim()
-        .min(3, "Title minimal 3 karakter")
-        .max(100, "Title maksimal 100 karakter"),
-
-    status: z
-        .enum(["pending", "completed"])
-        .default("pending"),
-
-    userId: z.coerce
+    productId: z.coerce
         .number()
         .int()
         .positive(),
+
+    quantity: z.coerce
+        .number()
+        .int()
+        .min(1, "Quantity minimal 1"),
+
+    status: z
+        .enum([
+            "pending",
+            "processing",
+            "completed",
+            "cancelled",
+        ])
+        .default("pending"),
 });
 
 export const UpdateOrderSchema = z.object({
-    title: z
-        .string()
-        .trim()
-        .min(3)
-        .max(100)
-        .optional(),
-
-    status: z
-        .enum(["pending", "completed"])
-        .optional(),
-
-    userId: z.coerce
+    productId: z.coerce
         .number()
         .int()
         .positive()
+        .optional(),
+
+    quantity: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .optional(),
+
+    status: z
+        .enum([
+            "pending",
+    "waiting_payment",
+    "paid",
+    "processing",
+    "completed",
+    "cancelled",
+        ])
         .optional(),
 });
 

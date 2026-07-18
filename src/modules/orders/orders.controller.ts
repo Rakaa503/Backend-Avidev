@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import type { AuthUser } from "../../middleware/auth.middleware";
 
 import { OrdersService } from "./orders.service";
 
@@ -7,6 +8,14 @@ import {
     UpdateOrderSchema,
 } from "./orders.schema";
 
+type Variables = {
+    user: AuthUser;
+};
+
+type AppContext = Context<{
+    Variables: Variables;
+}>;
+
 export class OrdersController {
     private readonly service: OrdersService;
 
@@ -14,50 +23,112 @@ export class OrdersController {
         this.service = new OrdersService();
     }
 
-    async index(c: Context) {
+    /**
+     * GET ALL ORDERS
+     * Admin & Superadmin
+     */
+    async index(c: AppContext) {
         const orders = await this.service.getAll();
 
-        return c.json(orders);
+        return c.json({
+            success: true,
+            data: orders,
+        });
     }
 
-    async show(c: Context) {
+    /**
+     * GET ORDER BY ID
+     * Admin & Superadmin
+     */
+    async show(c: AppContext) {
         const id = Number(c.req.param("id"));
 
         const order = await this.service.getById(id);
 
-        return c.json(order);
+        return c.json({
+            success: true,
+            data: order,
+        });
     }
 
-    async store(c: Context) {
+    /**
+     * CREATE ORDER
+     * User, Admin, Superadmin
+     */
+    async store(c: AppContext) {
+        const user = c.get("user");
+
         const body = await c.req.json();
 
         const data = CreateOrderSchema.parse(body);
 
-        const order = await this.service.create(data);
+        const order = await this.service.create(
+            user.id,
+            data
+        );
 
-        return c.json(order, 201);
+        return c.json(
+            {
+                success: true,
+                data: order,
+            },
+            201
+        );
     }
 
-    async update(c: Context) {
+    /**
+     * GET CURRENT USER ORDERS
+     */
+    async myOrders(c: AppContext) {
+        const user = c.get("user");
+
+        const orders =
+            await this.service.getMyOrders(
+                user.id
+            );
+
+        return c.json({
+            success: true,
+            data: orders,
+        });
+    }
+
+    /**
+     * UPDATE ORDER
+     * Admin & Superadmin
+     */
+    async update(c: AppContext) {
         const id = Number(c.req.param("id"));
 
         const body = await c.req.json();
 
         const data = UpdateOrderSchema.parse(body);
 
-        const order = await this.service.update(
-            id,
-            data
-        );
+        const order =
+            await this.service.update(
+                id,
+                data
+            );
 
-        return c.json(order);
+        return c.json({
+            success: true,
+            data: order,
+        });
     }
 
-    async destroy(c: Context) {
+    /**
+     * DELETE ORDER
+     * Superadmin
+     */
+    async destroy(c: AppContext) {
         const id = Number(c.req.param("id"));
 
-        const result = await this.service.delete(id);
+        const result =
+            await this.service.delete(id);
 
-        return c.json(result);
+        return c.json({
+            success: true,
+            data: result,
+        });
     }
 }

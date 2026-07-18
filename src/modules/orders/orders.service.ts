@@ -18,20 +18,37 @@ export class OrdersService {
         return this.repository.findAll();
     }
 
+
     async getById(id: number) {
-        const order = await this.repository.findById(id);
+        const order =
+            await this.repository.findById(id);
 
         if (!order) {
-            throw new AppError("Order tidak ditemukan", 404);
+            throw new AppError(
+                "Order tidak ditemukan",
+                404
+            );
         }
 
         return order;
     }
 
-    async create(data: CreateOrderInput) {
-        const user = await this.repository.userExists(
-            data.userId
+
+    async getMyOrders(userId: number) {
+        return this.repository.findByUserId(
+            userId
         );
+    }
+
+
+    async create(
+        userId: number,
+        data: CreateOrderInput
+    ) {
+        const user =
+            await this.repository.userExists(
+                userId
+            );
 
         if (!user) {
             throw new AppError(
@@ -40,18 +57,46 @@ export class OrdersService {
             );
         }
 
+
+        const product =
+            await this.repository.productExists(
+                data.productId
+            );
+
+        if (!product) {
+            throw new AppError(
+                "Product tidak ditemukan",
+                404
+            );
+        }
+
+
+        if (
+            product.stock < data.quantity
+        ) {
+            throw new AppError(
+                "Stok produk tidak mencukupi",
+                400
+            );
+        }
+
+
         return this.repository.create({
-            title: data.title,
-            status: data.status,
-            userId: data.userId,
+            userId,
+            productId: data.productId,
+            quantity: data.quantity,
+            status: "pending",
         });
     }
+
 
     async update(
         id: number,
         data: UpdateOrderInput
     ) {
-        const order = await this.repository.findById(id);
+        const order =
+            await this.repository.findById(id);
+
 
         if (!order) {
             throw new AppError(
@@ -60,29 +105,36 @@ export class OrdersService {
             );
         }
 
-        if (data.userId !== undefined) {
-            const user =
-                await this.repository.userExists(
-                    data.userId
+
+        if (
+            data.productId !== undefined
+        ) {
+            const product =
+                await this.repository.productExists(
+                    data.productId
                 );
 
-            if (!user) {
+
+            if (!product) {
                 throw new AppError(
-                    "User tidak ditemukan",
+                    "Product tidak ditemukan",
                     404
                 );
             }
         }
 
-        return this.repository.update(id, {
-            title: data.title,
-            status: data.status,
-            userId: data.userId,
-        });
+
+        return this.repository.update(
+            id,
+            data
+        );
     }
 
+
     async delete(id: number) {
-        const order = await this.repository.findById(id);
+        const order =
+            await this.repository.findById(id);
+
 
         if (!order) {
             throw new AppError(
@@ -91,10 +143,13 @@ export class OrdersService {
             );
         }
 
+
         await this.repository.delete(id);
 
+
         return {
-            message: "Order berhasil dihapus",
+            message:
+                "Order berhasil dihapus",
         };
     }
 }

@@ -1,15 +1,17 @@
 import { prisma } from "../../core/database/prisma";
 
 export interface CreateOrderData {
-    title: string;
-    status: string;
     userId: number;
+    productId: number;
+    quantity: number;
+    status: string;
 }
 
 export interface UpdateOrderData {
-    title?: string;
-    status?: string;
     userId?: number;
+    productId?: number;
+    quantity?: number;
+    status?: string;
 }
 
 export class OrdersRepository {
@@ -23,12 +25,14 @@ export class OrdersRepository {
                         role: true,
                     },
                 },
+                product: true,
             },
             orderBy: {
                 id: "desc",
             },
         });
     }
+
 
     async findById(id: number) {
         return prisma.order.findUnique({
@@ -43,9 +47,33 @@ export class OrdersRepository {
                         role: true,
                     },
                 },
+                product: true,
             },
         });
     }
+
+
+    async findByUserId(userId: number) {
+        return prisma.order.findMany({
+            where: {
+                userId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        role: true,
+                    },
+                },
+                product: true,
+            },
+            orderBy: {
+                id: "desc",
+            },
+        });
+    }
+
 
     async create(data: CreateOrderData) {
         return prisma.order.create({
@@ -58,9 +86,11 @@ export class OrdersRepository {
                         role: true,
                     },
                 },
+                product: true,
             },
         });
     }
+
 
     async update(
         id: number,
@@ -79,9 +109,11 @@ export class OrdersRepository {
                         role: true,
                     },
                 },
+                product: true,
             },
         });
     }
+
 
     async delete(id: number) {
         return prisma.order.delete({
@@ -90,6 +122,7 @@ export class OrdersRepository {
             },
         });
     }
+
 
     async userExists(userId: number) {
         return prisma.user.findUnique({
@@ -101,6 +134,37 @@ export class OrdersRepository {
             },
         });
     }
+
+
+    async productExists(productId: number) {
+        return prisma.product.findUnique({
+            where: {
+                id: productId,
+            },
+            select: {
+                id: true,
+                stock: true,
+            },
+        });
+    }
+
+
+    async decreaseStock(
+        productId: number,
+        quantity: number
+    ) {
+        return prisma.product.update({
+            where: {
+                id: productId,
+            },
+            data: {
+                stock: {
+                    decrement: quantity,
+                },
+            },
+        });
+    }
 }
+
 
 export const ordersRepository = new OrdersRepository();
