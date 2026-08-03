@@ -3,7 +3,10 @@ import { createSecurity } from "avss-lite-Raka503";
 
 const security = createSecurity();
 
-export const securityMiddleware: MiddlewareHandler = async (c, next) => {
+export const securityMiddleware: MiddlewareHandler = async (
+    c,
+    next
+) => {
     /**
      * Security Headers
      */
@@ -16,13 +19,10 @@ export const securityMiddleware: MiddlewareHandler = async (c, next) => {
     }
 
     /**
-     * CORS
+     * NOTE:
+     * CORS sudah ditangani oleh hono/cors di app.ts
+     * Jangan set header CORS lagi di sini agar tidak bentrok.
      */
-    const corsHeaders = security.cors.createHeaders();
-
-    for (const [key, value] of Object.entries(corsHeaders)) {
-        c.header(key, value);
-    }
 
     /**
      * Trusted Proxy
@@ -41,26 +41,31 @@ export const securityMiddleware: MiddlewareHandler = async (c, next) => {
     );
 
     /**
-     * XSS
+     * XSS Sanitization
      */
     if (
-        c.req.header("content-type")?.includes("application/json")
+        c.req
+            .header("content-type")
+            ?.includes("application/json")
     ) {
         try {
             const body = await c.req.json();
 
-            const sanitized = security.xss.sanitize(body);
+            const sanitized =
+                security.xss.sanitize(body);
 
-            c.set("sanitizedBody", sanitized);
+            c.set(
+                "sanitizedBody",
+                sanitized
+            );
         } catch {
-            // Ignore jika body kosong
+            // ignore
         }
     }
 
     /**
      * CSRF
-     *
-     * Nanti kita aktifkan setelah frontend selesai.
+     * Aktifkan nanti setelah frontend selesai.
      */
 
     await next();

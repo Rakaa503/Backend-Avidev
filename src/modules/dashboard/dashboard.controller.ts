@@ -2,16 +2,68 @@ import type { Context } from "hono";
 
 import { DashboardService } from "./dashboard.service";
 
+
 export class DashboardController {
-    private readonly service: DashboardService;
 
-    constructor() {
-        this.service = new DashboardService();
+    private readonly service =
+        new DashboardService();
+
+
+
+
+
+    async overview(c: Context) {
+
+        const authUser =
+            c.get("user");
+
+
+        const result =
+            await this.service.overview(
+                authUser.id
+            );
+
+
+        return c.json({
+
+            success:true,
+
+            data:result,
+
+        });
+
     }
 
-    async index(c: Context) {
-        const stats = await this.service.getStats();
 
-        return c.json(stats);
+
+
+
+
+
+    // ==========================
+    // ANALYTICS
+    // ==========================
+
+
+    async analytics(c: Context) {
+
+
+        const result =
+            await this.service.getAnalytics();
+
+
+
+        return c.json({
+
+            success:true,
+
+            data:result,
+
+        });
+
+
     }
+
+
+
 }

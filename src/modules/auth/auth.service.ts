@@ -4,7 +4,6 @@ import {
 } from "../../core/crypto/bcrypt";
 
 import { JWT } from "../../core/auth";
-
 import { AppError } from "../../core/errors/app-error";
 
 import { AuthRepository } from "./auth.repository";
@@ -17,7 +16,9 @@ export class AuthService {
         password: string
     ) {
         const exists =
-            await this.repository.findByUsername(username);
+            await this.repository.findByUsername(
+                username
+            );
 
         if (exists) {
             throw new AppError(
@@ -61,19 +62,19 @@ export class AuthService {
 
         return {
             user: safeUser,
-            token: accessToken,
             accessToken,
             refreshToken,
         };
     }
-
 
     async login(
         username: string,
         password: string
     ) {
         const user =
-            await this.repository.findByUsername(username);
+            await this.repository.findByUsername(
+                username
+            );
 
         if (!user) {
             throw new AppError(
@@ -120,12 +121,10 @@ export class AuthService {
 
         return {
             user: safeUser,
-            token: accessToken,
             accessToken,
             refreshToken,
         };
     }
-
 
     async refresh(
         refreshToken: string
@@ -134,7 +133,9 @@ export class AuthService {
 
         try {
             payload =
-                JWT.verifyRefreshToken(refreshToken);
+                JWT.verifyRefreshToken(
+                    refreshToken
+                );
         } catch {
             throw new AppError(
                 "Refresh token tidak valid",
@@ -155,13 +156,24 @@ export class AuthService {
         }
 
         if (
-            user.refreshToken !== refreshToken
+            user.refreshToken !==
+            refreshToken
         ) {
             throw new AppError(
                 "Refresh token sudah tidak berlaku",
                 401
             );
         }
+
+        const newRefreshToken =
+            JWT.signRefreshToken({
+                id: user.id,
+            });
+
+        await this.repository.updateRefreshToken(
+            user.id,
+            newRefreshToken
+        );
 
         const accessToken =
             JWT.signAccessToken({
@@ -172,18 +184,19 @@ export class AuthService {
 
         return {
             accessToken,
+            refreshToken: newRefreshToken,
         };
     }
 
-
     async logout(id: number) {
-        await this.repository.deleteRefreshToken(id);
+        await this.repository.deleteRefreshToken(
+            id
+        );
 
         return {
             message: "Logout berhasil",
         };
     }
-
 
     async changePassword(
         id: number,
@@ -221,6 +234,10 @@ export class AuthService {
         await this.repository.updatePassword(
             id,
             hashedPassword
+        );
+
+        await this.repository.deleteRefreshToken(
+            id
         );
 
         return {

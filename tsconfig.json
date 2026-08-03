@@ -1,31 +1,52 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "compilerOptions": {
+        /* Language */
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
 
-    "strict": true,
-    "skipLibCheck": true,
+        /* Paths */
+        "baseUrl": "./src",
+        "paths": {
+            "@/*": ["./*"]
+        },
 
-    "types": [
-      "bun-types",
-      "node"
+        /* Strict */
+        "strict": true,
+        "skipLibCheck": true,
+
+        /* Types */
+        "types": [
+            "bun-types",
+            "node"
+        ],
+
+        /* Output */
+        "rootDir": "./src",
+        "outDir": "./dist",
+
+        /* JSX */
+        "jsx": "react-jsx",
+        "jsxImportSource": "hono/jsx",
+
+        /* Interop */
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+
+        /* Quality of Life */
+        "resolveJsonModule": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "noEmit": true
+    },
+
+    "include": [
+        "src"
     ],
 
-    "rootDir": "./src",
-    "outDir": "./dist",
-
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
-  },
-
-  "include": [
-    "src"
-  ],
-
-  "exclude": [
-    "node_modules",
-    "dist",
-    "prisma"
-  ]
+    "exclude": [
+        "node_modules",
+        "dist",
+        "prisma"
+    ]
 }

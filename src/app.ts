@@ -1,10 +1,12 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { ZodError } from "zod";
 
 import routes from "./routes";
 
 import { requestIdMiddleware } from "./middleware/request-id";
 import { securityMiddleware } from "./middleware/security.middleware";
-import { ZodError } from "zod";
+
 import { AppError } from "./core/errors/app-error";
 
 import {
@@ -16,6 +18,10 @@ import { swagger } from "./docs/swagger";
 import { openApiDocument } from "./docs/openapi";
 
 const app = new Hono();
+
+/**
+ * Global Error Handler
+ */
 app.onError((err, c) => {
     if (err instanceof AppError) {
         return c.json(
@@ -48,9 +54,6 @@ app.onError((err, c) => {
         500
     );
 });
-/**
- * Global Error Handler
- */
 
 /**
  * Request ID
@@ -58,14 +61,35 @@ app.onError((err, c) => {
 app.use("*", requestIdMiddleware);
 
 /**
+ * CORS
+ */
+app.use(
+    "*",
+    cors({
+        origin: "http://localhost:3001",
+        credentials: true,
+        allowMethods: [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS",
+        ],
+        allowHeaders: [
+            "Content-Type",
+            "Authorization",
+        ],
+    })
+);
+
+/**
  * Global Rate Limit
- * 100 requests / 1 minute
  */
 app.use("*", rateLimitMiddleware);
 
 /**
  * Login Rate Limit
- * 5 requests / 1 minute
  */
 app.use(
     "/api/v1/auth/login",
@@ -84,10 +108,12 @@ app.use("*", securityMiddleware);
 /**
  * Root
  */
-app.get("/", (c) => c.text("Backend AviDev API"));
+app.get("/", (c) => {
+    return c.text("Backend AviDev API");
+});
 
 /**
- * Health Check
+ * Health
  */
 app.get("/health", (c) => {
     return c.json({
@@ -95,28 +121,21 @@ app.get("/health", (c) => {
         status: "ok",
         service: "Backend AviDev",
         version: "1.0.0",
-        environment: process.env.NODE_ENV ?? "development",
-        uptime: process.uptime(),
         timestamp: new Date().toISOString(),
     });
 });
 
 /**
- * OpenAPI JSON
+ * OpenAPI
  */
 app.get("/openapi.json", (c) => {
     return c.json(openApiDocument);
 });
 
 /**
- * Swagger UI
+ * Swagger
  */
 app.get("/docs", swagger);
-
-/**
- * Test
- */
-app.get("/test-auth", (c) => c.text("TEST AUTH"));
 
 /**
  * API Routes

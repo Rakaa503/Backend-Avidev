@@ -2,66 +2,50 @@ import { Hono } from "hono";
 
 import { ProductsController } from "./products.controller";
 
-import { authMiddleware } from "../../middleware/auth.middleware";
-
-import { roleMiddleware } from "../../middleware/role.middleware";
-
-
 const products = new Hono();
 
-const controller =
-    new ProductsController();
+const controller = new ProductsController();
 
-
-// Public
-products.get(
-    "/",
-    (c) => controller.index(c)
+/**
+ * Product Statistics
+ */
+products.get("/stats", (c) =>
+    controller.stats(c)
 );
 
-
-products.get(
-    "/:id",
-    (c) => controller.show(c)
+/**
+ * Get All Products
+ */
+products.get("/", (c) =>
+    controller.index(c)
 );
 
-
-// Protected
-products.use(
-    "*",
-    authMiddleware
+/**
+ * Get Product By ID
+ */
+products.get("/:id", (c) =>
+    controller.show(c)
 );
 
-
-// Admin + Superadmin
-products.post(
-    "/",
-    roleMiddleware(
-        "admin",
-        "superadmin"
-    ),
-    (c) => controller.store(c)
+/**
+ * Create Product
+ */
+products.post("/", (c) =>
+    controller.store(c)
 );
 
-
-products.patch(
-    "/:id",
-    roleMiddleware(
-        "admin",
-        "superadmin"
-    ),
-    (c) => controller.update(c)
+/**
+ * Update Product
+ */
+products.put("/:id", (c) =>
+    controller.update(c)
 );
 
-
-// Superadmin only
-products.delete(
-    "/:id",
-    roleMiddleware(
-        "superadmin"
-    ),
-    (c) => controller.destroy(c)
+/**
+ * Delete Product
+ */
+products.delete("/:id", (c) =>
+    controller.destroy(c)
 );
-
 
 export default products;

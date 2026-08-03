@@ -8,70 +8,93 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  username String @unique
-  password String
-  role     String @default("user")
+  id           Int      @id @default(autoincrement())
+
+  username     String   @unique
+  password     String
+  role         String   @default("user")
 
   refreshToken String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  orders    Order[]
-  auditLogs AuditLog[]
+  // Relations
+  orders        Order[]
+  auditLogs     AuditLog[]
 }
 
 model Product {
-  id    Int    @id @default(autoincrement())
-  name  String
-  price Int
-  stock Int
+  id          Int      @id @default(autoincrement())
 
-  orders Order[]
+  name        String
+  category    String
+  description String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  price       Float
+  stock       Int
+
+  image       String?
+
+  /// active | inactive | draft
+  status      String   @default("active")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  orders       Order[]
+
+  @@index([name])
+  @@index([category])
+  @@index([status])
 }
 
-
 model Order {
-  id Int @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
 
-  userId Int
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  user User @relation(fields: [userId], references: [id])
 
-  productId Int?
-  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  quantity Int @default(1)
+  quantity    Int      @default(1)
 
-  status String @default("pending")
+  /// price × quantity
+  total       Int
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  /// pending | processing | paid | completed | cancelled
+  status      String   @default("pending")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model AuditLog {
-  id Int @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
 
-  userId Int?
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  action String
+  action      String
+  method      String
+  path        String
 
-  method String
+  statusCode  Int
 
-  path String
+  ip          String?
+  userAgent   String?
+  requestId   String?
 
-  statusCode Int
+  createdAt   DateTime @default(now())
 
-  ip String?
-
-  userAgent String?
-
-  requestId String?
-
-  createdAt DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
 }

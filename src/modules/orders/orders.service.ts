@@ -7,15 +7,24 @@ import type {
     UpdateOrderInput,
 } from "./orders.schema";
 
+
 export class OrdersService {
     private readonly repository: OrdersRepository;
+
 
     constructor() {
         this.repository = new OrdersRepository();
     }
 
-    async getAll() {
-        return this.repository.findAll();
+
+    async getAll(params: {
+        page: number;
+        limit: number;
+        search: string;
+    }) {
+        return this.repository.findAll(
+            params
+        );
     }
 
 
@@ -23,12 +32,14 @@ export class OrdersService {
         const order =
             await this.repository.findById(id);
 
+
         if (!order) {
             throw new AppError(
                 "Order tidak ditemukan",
                 404
             );
         }
+
 
         return order;
     }
@@ -50,6 +61,7 @@ export class OrdersService {
                 userId
             );
 
+
         if (!user) {
             throw new AppError(
                 "User tidak ditemukan",
@@ -62,6 +74,7 @@ export class OrdersService {
             await this.repository.productExists(
                 data.productId
             );
+
 
         if (!product) {
             throw new AppError(
